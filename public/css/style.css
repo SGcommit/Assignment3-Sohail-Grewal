@@ -58,12 +58,11 @@ body {
     margin: 0 5px;
     padding: 5px 10px;
     border: none;
-    background-color: #4CAF50;
+    background-color: #4CAF50; 
     color: white;
     cursor: pointer;
 }
 
-/* Modal */
-#pokemon-modal {
-    /* ... (Add styles for the modal here) */
+#pagination button.active {
+    background-color: #2E8B57; /* Darker green for active button */
 }

@@ -9,27 +9,45 @@ app.use(express.static('public')); // Serve static files (CSS, JS)
 
 app.get('/', async (req, res) => {
     try {
-        // 1. Fetch all Pokemon and types simultaneously
         const [pokemonResponse, typesResponse] = await Promise.all([
             fetch('https://pokeapi.co/api/v2/pokemon?limit=810'),
-            fetch('https://pokeapi.co/api/v2/type/')
+            fetch('https://pokeapi.co/api/v2/type/') // Fetch types
         ]);
         
         const allPokemon = await pokemonResponse.json();
-        const types = await typesResponse.json();
+        const types = await typesResponse.json(); // Get types from response
 
         res.render('index', { 
             pokemon: allPokemon.results, 
-            types: types.results,
-            currentPage: 1, // Start on the first page
-            pokemonPerPage: 10 // Number of Pokemon per page
+            types: types.results, // Send types to index.ejs
+            currentPage: 1, 
+            pokemonPerPage: 10 
         });
     } catch (error) {
         console.error('Error fetching data:', error);
-        res.status(500).send('Internal Server Error'); // Handle errors
+        res.status(500).send('Internal Server Error'); 
     }
 });
 
+app.get('/pokemon', async (req, res) => {
+    try {
+        const [pokemonResponse, typesResponse] = await Promise.all([
+            fetch('https://pokeapi.co/api/v2/pokemon?limit=810'),
+            fetch('https://pokeapi.co/api/v2/type/') // Fetch types
+        ]);
+
+        const allPokemon = await pokemonResponse.json();
+        const types = await typesResponse.json();
+
+        res.json({ 
+            pokemon: allPokemon.results, 
+            types: types.results // Send types in the correct format
+        }); 
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
 app.get('/pokemon/:name', async (req, res) => {
     try {
         const pokemonResponse = await fetch(`https://pokeapi.co/api/v2/pokemon/${req.params.name}`);
