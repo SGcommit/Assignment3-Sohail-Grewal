@@ -8,14 +8,14 @@
 <body>
     <div class="container">
         <h1>Pokédex</h1>
-
         <div id="filter-section">
             </div>
-
         <div id="pokemon-grid">
             <% pokemon.forEach(pokemon => { %>
                 <div class="pokemon-card" data-name="<%= pokemon.name %>">
-                    </div>
+                    <img src="<%= pokemon.url %>">
+                    <h2><%= pokemon.name %></h2> 
+                </div>
             <% }); %>
         </div>
 
@@ -26,6 +26,6 @@
             </div>
 
     </div>
-    <script src="/js/scripts.js"></script> 
+    <script src="/scripts.js"></script> 
 </body>
 </html>

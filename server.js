@@ -1,7 +1,10 @@
 const express = require('express');
+require("./utils.js");
+const path = require('path');  
 const app = express();
 
 app.set('view engine', 'ejs'); // Use EJS for templating
+app.set('views', path.join(__dirname, 'views')); // Set the path for views
 app.use(express.static('public')); // Serve static files (CSS, JS)
 
 app.get('/', async (req, res) => {
