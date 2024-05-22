@@ -4,40 +4,33 @@ const paginationSection = document.getElementById('pagination');
 const pokemonModal = document.getElementById('pokemon-modal');
 
 // Global variables
-let allPokemon = []; 
+let allPokemon = [];
 let currentPage = 1;
 let pokemonPerPage = 10;
 let filteredPokemon = [];
+let selectedTypes = [];
+let loaded = false;
 
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 // Initial Data Fetch (Happens once when the page loads)
-fetch('/pokemon')
+let initialFetch = true;
+fetch('/pokemon?page=1') // Fetch the first page initially
     .then(response => response.json())
     .then(data => {
-        allPokemon = data.pokemon; // Store all pokemon in global variable
-        filteredPokemon = allPokemon; // Initially, all Pokemon are shown
-        createFilterCheckboxes(data.types); // Create filter checkboxes
-        showPokemon();  // Show Pokemon for the initial page
-        setupPagination(Math.ceil(allPokemon.length / pokemonPerPage)); // Setup pagination
+        if (initialFetch) {
+            allPokemon = data.pokemon; // Store all pokemon in global variable only on initial fetch
+        }
+
+        filteredPokemon = data.pokemon;
+        createFilterCheckboxes(data.types);
+        loaded = true; // Mark data as loaded
+        setupPagination(data.totalPages); // Use totalPages from response
+        initialFetch = false; // Turn off flag for future fetches
     })
     .catch(error => console.error('Error fetching data:', error));
 
-// Function to show Pokemon
-async function showPokemon() {
-    pokemonGrid.innerHTML = '';
-    // Get the Pokemon to display on the current page
-    const startIndex = (currentPage - 1) * pokemonPerPage;
-    const endIndex = startIndex + pokemonPerPage;
-    const pokemonToShow = filteredPokemon.slice(startIndex, endIndex);
-
-    for (const pokemon of pokemonToShow) {
-        createPokemonCard(pokemon.url);
-    }
-
-    setupPagination(Math.ceil(filteredPokemon.length / pokemonPerPage));
-}
 
 // Function to create filter checkboxes
 function createFilterCheckboxes(types) {
@@ -54,30 +47,28 @@ function createFilterCheckboxes(types) {
         filterSection.appendChild(checkbox);
         filterSection.appendChild(label);
 
-        checkbox.addEventListener('change', filterPokemon); 
+        checkbox.addEventListener('change', filterPokemon);
     });
 }
 
 
-async function createPokemonCard(pokemonUrl) {
-    const response = await fetch(pokemonUrl)
-    const pokemon = await response.json();
-
+async function createPokemonCard(pokemon) {
     const pokemonCard = document.createElement('div');
     pokemonCard.classList.add('pokemon-card');
     pokemonCard.dataset.name = pokemon.name;
+    pokemonCard.dataset.id = pokemon.id
 
     const pokemonImage = document.createElement('img');
-    pokemonImage.src = pokemon.sprites.front_default; // Update image path
     pokemonImage.alt = `${pokemon.name} sprite`;
+    pokemonImage.src = pokemon.sprites?.front_default || '/images/placeholder.png'; // If no image, use a placeholder image. Ensure you have 'placeholder.png' in the '/public/images' folder
 
     const pokemonName = document.createElement('h2');
     pokemonName.textContent = capitalizeFirstLetter(pokemon.name);
 
     pokemonCard.appendChild(pokemonImage);
     pokemonCard.appendChild(pokemonName);
-
-    pokemonCard.addEventListener('click', () => showPokemonDetails(pokemon));
+    
+    pokemonCard.addEventListener('click', () => showPokemonDetails(pokemon.name, pokemon.id));
     pokemonGrid.appendChild(pokemonCard);
 }
 
@@ -122,26 +113,40 @@ function setupPagination(totalPages) {
 function updatePaginationButtons() {
     const pageButtons = paginationSection.querySelectorAll('button');
     pageButtons.forEach(button => {
-        button.disabled = 
-            (button.textContent === 'Prev' && currentPage === 1) || 
+        button.disabled =
+            (button.textContent === 'Prev' && currentPage === 1) ||
             (button.textContent === 'Next' && currentPage === Math.ceil(filteredPokemon.length / pokemonPerPage));
 
         button.classList.toggle('active', button.textContent == currentPage);
     });
 }
 
-// Function to filter Pokemon
-function filterPokemon() {
+async function filterPokemon() {
     const selectedTypes = Array.from(filterSection.querySelectorAll('input[type="checkbox"]:checked'))
         .map(checkbox => checkbox.value);
-
-    filteredPokemon = allPokemon.filter(pokemon => {
-        return pokemon.types.some(type => selectedTypes.includes(type.type.name));
-    });
-
-    currentPage = 1; // Reset to first page when filtering
-    showPokemon();
+    console.log("selected types: ", selectedTypes);
+    // Fetch the pokemon data if any filters are selected, otherwise show all
+    currentPage = 1;
+    await showPokemon(); //wait for showPokemon to finish updating filteredPokemon
     setupPagination(Math.ceil(filteredPokemon.length / pokemonPerPage)); 
+}
+// Function to show Pokemon (Modified)
+async function showPokemon() {
+    pokemonGrid.innerHTML = ''; // Clear the grid
+
+    // Construct the fetch URL with query parameters
+    const fetchUrl = `/pokemon?page=${currentPage}&type=${selectedTypes.join(',')}`;
+
+    const response = await fetch(fetchUrl);
+    const data = await response.json();
+
+    filteredPokemon = data.pokemon; // Update filteredPokemon with the data from the current page
+
+    for (const pokemon of filteredPokemon) {
+        createPokemonCard(pokemon);
+    }
+
+    setupPagination(data.totalPages);
 }
 
 function showPokemonDetails(pokemon) {
