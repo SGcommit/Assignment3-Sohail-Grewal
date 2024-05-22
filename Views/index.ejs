@@ -8,7 +8,24 @@
 <body>
     <div class="container">
         <h1>Pokédex</h1>
+
+        <div id="filter-section">
+            </div>
+
+        <div id="pokemon-grid">
+            <% pokemon.forEach(pokemon => { %>
+                <div class="pokemon-card" data-name="<%= pokemon.name %>">
+                    </div>
+            <% }); %>
         </div>
-    </body>
-<script src="/js/scripts.js"></script>
+
+        <div id="pagination">
+            </div>
+
+        <div id="pokemon-modal" class="modal">
+            </div>
+
+    </div>
+    <script src="/js/scripts.js"></script> 
+</body>
 </html>

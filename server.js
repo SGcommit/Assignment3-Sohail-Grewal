@@ -1,20 +1,43 @@
 const express = require('express');
-const fetch = require('node-fetch'); // or other library
+const fetch = require('node-fetch');
 const app = express();
 
-app.set('view engine', 'ejs'); 
-app.use(express.static('public')); 
+app.set('view engine', 'ejs'); // Use EJS for templating
+app.use(express.static('public')); // Serve static files (CSS, JS)
 
 app.get('/', async (req, res) => {
-    const allPokemon = await fetch('https://pokeapi.co/api/v2/pokemon?limit=810').then(res => res.json());
-    const types = await fetch('https://pokeapi.co/api/v2/type/').then(res => res.json());
+    try {
+        // 1. Fetch all Pokemon and types simultaneously
+        const [pokemonResponse, typesResponse] = await Promise.all([
+            fetch('https://pokeapi.co/api/v2/pokemon?limit=810'),
+            fetch('https://pokeapi.co/api/v2/type/')
+        ]);
+        
+        const allPokemon = await pokemonResponse.json();
+        const types = await typesResponse.json();
 
-    res.render('index', { pokemon: allPokemon.results, types: types.results }); 
+        res.render('index', { 
+            pokemon: allPokemon.results, 
+            types: types.results,
+            currentPage: 1, // Start on the first page
+            pokemonPerPage: 10 // Number of Pokemon per page
+        });
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        res.status(500).send('Internal Server Error'); // Handle errors
+    }
 });
 
 app.get('/pokemon/:name', async (req, res) => {
-    const pokemon = await fetch(`https://pokeapi.co/api/v2/pokemon/${req.params.name}`).then(res => res.json());
-    res.json(pokemon); // Send details back as JSON
+    try {
+        const pokemonResponse = await fetch(`https://pokeapi.co/api/v2/pokemon/${req.params.name}`);
+        const pokemon = await pokemonResponse.json();
+        res.json(pokemon); 
+    } catch (error) {
+        console.error('Error fetching Pokemon details:', error);
+        res.status(404).send('Pokemon not found'); // Handle not found error
+    }
 });
 
-app.listen(3000, () => console.log('Server running on port 3000'));
+const PORT = process.env.PORT || 3000; // Use environment variable or default to 3000
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
