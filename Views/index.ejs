@@ -1,31 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Pokedex</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pokédex</title>
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Pokédex</h1>
-        <div id="filter-section"></div>
-        <div id="pokemon-count"></div>
-        <div id="pokemon-grid">
-            <% pokemon.forEach(pokemon => { %>
-                <div class="pokemon-card" data-name="<%= pokemon.name %>">
-                    <img src="<%= pokemon.url %>">
-                    <h2><%= pokemon.name %></h2> 
-                </div>
-            <% }); %>
-        </div>
-
-        <div id="pagination">
-            </div>
-
-        <div id="pokemon-modal" class="modal">
-            </div>
-
-    </div>
-    <script src="/scripts.js"></script> 
+  <header>
+    <h1>Pokédex</h1>
+  </header>
+  <main>
+    <section id="filter-section">
+      <h2>Filter by Type</h2>
+    </section>
+    <section id="pokemon-count"></section> <!-- Add this line to display count -->
+    <section id="pokemon-grid"></section>
+    <section id="pagination"></section>
+    <div id="pokemon-modal" class="modal"></div>
+  </main>
+  <script src="/scripts.js"></script>
 </body>
 </html>
