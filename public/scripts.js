@@ -125,6 +125,11 @@ function createPaginationButton(label, page, currentPage) {
   } else {
     button.disabled = (page < 1 || page > totalPages);
   }
+
+  if (currentPage === page) {
+    button.classList.add('active');
+  }
+
   button.addEventListener('click', () => {
     currentPage = page;
     showPokemon(currentPage);
