@@ -157,13 +157,12 @@ async function showPokemon(currentPage) {
     pokemonGrid.innerHTML = '';
 
     const limit = pokemonPerPage;
-    const offset = (currentPage - 1) * limit; // Calculate the offset based on the current page
+    const offset = (currentPage - 1) * limit; 
 
     // Fetch Pokémon data based on selected types
     const types = getSelectedTypes();
     const { filteredCount, filteredPokemonNames } = await fetchFilteredPokemonData(offset, limit, types);
 
-    // Check if filteredPokemonNames is not an array, set it to an empty array if it's not
     const pokemonNamesArray = Array.isArray(filteredPokemonNames) ? filteredPokemonNames : [];
 
     for (const name of pokemonNamesArray) {
@@ -171,9 +170,9 @@ async function showPokemon(currentPage) {
       createPokemonCard(pokemonDetails);
     }
 
-    totalPages = Math.ceil(filteredCount / pokemonPerPage); // Update total pages based on filtered count
-    setupPagination(currentPage); // Update pagination buttons with the current page
-    updatePokemonCount(filteredCount, currentPage); // Update pokemon count display with filtered count
+    totalPages = Math.ceil(filteredCount / pokemonPerPage); 
+    setupPagination(currentPage); 
+    updatePokemonCount(filteredCount, currentPage); 
   } catch (error) {
     console.error('Error fetching Pokémon data:', error);
   }
