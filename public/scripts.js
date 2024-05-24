@@ -137,16 +137,18 @@ function createPaginationButton(label, page, currentPage) {
   return button;
 }
 
-function updatePokemonCount(totalCount) {
+function updatePokemonCount(totalCount, currentPage) {
   const pokemonCountElement = document.getElementById('pokemon-count');
-  if (currentPage && totalPages && !isNaN(currentPage) && !isNaN(totalPages)) {
-    const startIndex = (currentPage - 1) * pokemonPerPage + 1;
-    const endIndex = Math.min(currentPage * pokemonPerPage, totalCount);
-    pokemonCountElement.textContent = `Showing ${startIndex}-${endIndex} of ${totalCount} Pokémon (${currentPage}/${totalPages})`;
+  if (!isNaN(currentPage) && !isNaN(totalPages) && currentPage > 0 && totalPages > 0) {
+      const startIndex = Math.min((currentPage - 1) * pokemonPerPage + 1, totalCount);
+      const endIndex = Math.min(currentPage * pokemonPerPage, totalCount);
+      pokemonCountElement.textContent = `Showing ${startIndex}-${endIndex} of ${totalCount} Pokémon (${currentPage}/${totalPages})`;
   } else {
-    pokemonCountElement.textContent = `Total Pokémon: ${totalPokemonCount}`;
+      pokemonCountElement.textContent = `Total Pokémon: ${totalCount}`;
   }
 }
+
+
 
 // Show Pokémon based on current page
 async function showPokemon(currentPage) {
@@ -171,7 +173,7 @@ async function showPokemon(currentPage) {
 
     totalPages = Math.ceil(filteredCount / pokemonPerPage); // Update total pages based on filtered count
     setupPagination(currentPage); // Update pagination buttons with the current page
-    updatePokemonCount(filteredCount); // Update pokemon count display with filtered count
+    updatePokemonCount(filteredCount, currentPage); // Update pokemon count display with filtered count
   } catch (error) {
     console.error('Error fetching Pokémon data:', error);
   }
