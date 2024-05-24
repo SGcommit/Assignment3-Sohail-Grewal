@@ -19,83 +19,75 @@ function capitalizeFirstLetter(string) {
 // Create filter checkboxes
 async function createFilterCheckboxes() {
   try {
-      const types = await fetchTypesData();
-      const filterSection = document.getElementById('filter-section');
-      if (!filterSection) {
-          console.error('Filter section element not found');
-          return;
-      }
-      filterSection.innerHTML = '';
-      types.forEach(type => {
-          const checkbox = document.createElement('input');
-          checkbox.type = 'checkbox';
-          checkbox.id = type;
-          checkbox.value = type;
-          const label = document.createElement('label');
-          label.htmlFor = type;
-          label.textContent = type;
-          filterSection.appendChild(checkbox);
-          filterSection.appendChild(label);
-          checkbox.addEventListener('change', filterPokemon);
-      });
+    const types = await fetchTypesData();
+    filterSection.innerHTML = '';
+    types.forEach(type => {
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = type;
+      checkbox.value = type;
+      const label = document.createElement('label');
+      label.htmlFor = type;
+      label.textContent = capitalizeFirstLetter(type);
+      filterSection.appendChild(checkbox);
+      filterSection.appendChild(label);
+      checkbox.addEventListener('change', filterPokemon);
+    });
   } catch (error) {
-      console.error('Error creating filter checkboxes:', error);
+    console.error('Error creating filter checkboxes:', error);
   }
 }
-
 async function filterPokemon() {
   try {
-      // Get all selected types
-      const checkedCheckboxes = Array.from(filterSection.querySelectorAll('input[type="checkbox"]:checked'));
+    // Get all selected types
+    const checkedCheckboxes = Array.from(filterSection.querySelectorAll('input[type="checkbox"]:checked'));
 
-      // Allow only two types to be selected
-      if (checkedCheckboxes.length > 2) {
-        checkedCheckboxes[0].checked = false;
-      }
+    // Allow only two types to be selected
+    if (checkedCheckboxes.length > 2) {
+      checkedCheckboxes[0].checked = false;
+    }
 
-      // Extract selected type names
-      selectedTypes = checkedCheckboxes.map(checkbox => checkbox.value);
+    // Extract selected type names
+    selectedTypes = checkedCheckboxes.map(checkbox => checkbox.value);
 
-      // Reset current page to 1 when filtering
-      currentPage = 1;
+    // Reset current page to 1 when filtering
+    currentPage = 1;
 
-      // Fetch Pokémon data based on selected types
-      showPokemon(currentPage);
+    // Fetch Pokémon data based on selected types
+    showPokemon(currentPage);
   } catch (error) {
-      console.error('Error filtering Pokémon:', error);
+    console.error('Error filtering Pokémon:', error);
   }
 }
-// Update the fetch call inside the createPokemonCard function
+// Create Pokémon card
 async function createPokemonCard(pokemon) {
   try {
-      // Update the rest of the logic to work with the fetched details
-      if (!pokemon.sprites || !pokemon.name) {
-          throw new Error('Invalid Pokémon data');
-      }
+    // Update the rest of the logic to work with the fetched details
+    if (!pokemon.sprites || !pokemon.name) {
+      throw new Error('Invalid Pokémon data');
+    }
 
-      const pokemonGrid = document.getElementById('pokemon-grid');
+    const pokemonCard = document.createElement('div');
+    pokemonCard.classList.add('pokemon-card');
+    pokemonCard.dataset.name = pokemon.name;
 
-      const pokemonCard = document.createElement('div');
-      pokemonCard.classList.add('pokemon-card');
-      pokemonCard.dataset.name = pokemon.name;
+    const pokemonImage = document.createElement('img');
+    pokemonImage.alt = `${pokemon.name} sprite`;
+    pokemonImage.src = pokemon.sprites.front_default || '/images/placeholder.png';
 
-      const pokemonImage = document.createElement('img');
-      pokemonImage.alt = `${pokemon.name} sprite`;
-      pokemonImage.src = pokemon.sprites.front_default || '/images/placeholder.png';
+    const pokemonName = document.createElement('h2');
+    pokemonName.textContent = capitalizeFirstLetter(pokemon.name);
 
-      const pokemonName = document.createElement('h2');
-      pokemonName.textContent = capitalizeFirstLetter(pokemon.name);
+    pokemonCard.appendChild(pokemonImage);
+    pokemonCard.appendChild(pokemonName);
 
-      pokemonCard.appendChild(pokemonImage);
-      pokemonCard.appendChild(pokemonName);
+    pokemonCard.addEventListener('click', () => {
+      showPokemonDetails(pokemon);
+    });
 
-      pokemonCard.addEventListener('click', () => {
-          showPokemonDetails(pokemon);
-      });
-
-      pokemonGrid.appendChild(pokemonCard);
+    pokemonGrid.appendChild(pokemonCard);
   } catch (error) {
-      console.error('Error creating Pokémon card:', error);
+    console.error('Error creating Pokémon card:', error);
   }
 }
 
@@ -143,11 +135,11 @@ function createPaginationButton(label, page, currentPage) {
 function updatePokemonCount(totalCount) {
   const pokemonCountElement = document.getElementById('pokemon-count');
   if (currentPage && totalPages && !isNaN(currentPage) && !isNaN(totalPages)) {
-      const startIndex = (currentPage - 1) * pokemonPerPage + 1;
-      const endIndex = Math.min(currentPage * pokemonPerPage, totalCount);
-      pokemonCountElement.textContent = `Showing ${startIndex}-${endIndex} of ${totalCount} Pokémon (${currentPage}/${totalPages})`;
+    const startIndex = (currentPage - 1) * pokemonPerPage + 1;
+    const endIndex = Math.min(currentPage * pokemonPerPage, totalCount);
+    pokemonCountElement.textContent = `Showing ${startIndex}-${endIndex} of ${totalCount} Pokémon (${currentPage}/${totalPages})`;
   } else {
-      pokemonCountElement.textContent = `Total Pokémon: ${totalPokemonCount}`;
+    pokemonCountElement.textContent = `Total Pokémon: ${totalPokemonCount}`;
   }
 }
 
@@ -160,48 +152,32 @@ async function showPokemon(currentPage) {
     const limit = pokemonPerPage;
     const offset = (currentPage - 1) * limit; // Calculate the offset based on the current page
 
-    // Fetch total count of Pokémon
-    const totalCountData = await fetch(`https://pokeapi.co/api/v2/pokemon`);
-    if (!totalCountData.ok) {
-      throw new Error('Failed to fetch total count of Pokémon');
-    }
-    const totalCountResponse = await totalCountData.json();
-    const totalCount = totalCountResponse.count;
-
-    // Calculate total pages
-    totalPages = Math.ceil(totalCount / pokemonPerPage);
-
     // Fetch Pokémon data based on selected types
     const types = getSelectedTypes();
     const { filteredCount, filteredPokemonNames } = await fetchFilteredPokemonData(offset, limit, types);
 
     // Check if filteredPokemonNames is not an array, set it to an empty array if it's not
-    const filteredPokemonNamesArray = Array.isArray(filteredPokemonNames) ? filteredPokemonNames : [];
+    const pokemonNamesArray = Array.isArray(filteredPokemonNames) ? filteredPokemonNames : [];
 
-    for (const name of filteredPokemonNamesArray) {
+    for (const name of pokemonNamesArray) {
       const pokemonDetails = await fetchPokemonDetails(name);
       createPokemonCard(pokemonDetails);
     }
 
-    // Update total Pokemon count with filtered count
-    totalPokemonCount = filteredCount;
-
-    // Update pagination buttons with the current page and adjusted total pages
-    setupPagination(currentPage);
-
-    // Update pokemon count display with filtered count
-    updatePokemonCount(filteredCount);
+    totalPages = Math.ceil(filteredCount / pokemonPerPage); // Update total pages based on filtered count
+    setupPagination(currentPage); // Update pagination buttons with the current page
+    updatePokemonCount(filteredCount); // Update pokemon count display with filtered count
   } catch (error) {
     console.error('Error fetching Pokémon data:', error);
   }
 }
+
 // Function to get selected types from UI
 function getSelectedTypes() {
-  // Implement this function to get selected types from checkboxes
   const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
   const selectedTypes = [];
   checkboxes.forEach(checkbox => {
-      selectedTypes.push(checkbox.value);
+    selectedTypes.push(checkbox.value);
   });
   return selectedTypes;
 }
@@ -220,41 +196,67 @@ async function fetchPokemonData(offset, limit) {
   return pokemonNames; // Return only the names
 }
 
-// Function to fetch filtered Pokémon data
+// Fetch Pokémon data with pagination
 async function fetchFilteredPokemonData(offset, limit, types) {
   try {
     let apiUrl = `https://pokeapi.co/api/v2/pokemon?offset=${offset}&limit=${limit}`;
 
     // If types are selected, construct the API URL to filter by types
     if (types.length > 0) {
-      apiUrl += `&types=${types.join(',')}`;
+      apiUrl = `https://pokeapi.co/api/v2/type/${types[0]}`;
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error('Failed to fetch Pokémon data');
+      }
+      const data = await response.json();
+      let pokemonOfType = data.pokemon.map(p => p.pokemon.name);
+
+      if (types.length === 2) {
+        apiUrl = `https://pokeapi.co/api/v2/type/${types[1]}`;
+        const response2 = await fetch(apiUrl);
+        if (!response2.ok) {
+          throw new Error('Failed to fetch Pokémon data');
+        }
+        const data2 = await response2.json();
+        const secondTypePokemon = data2.pokemon.map(p => p.pokemon.name);
+        pokemonOfType = pokemonOfType.filter(p => secondTypePokemon.includes(p));
+      }
+
+      const totalCount = pokemonOfType.length;
+      const filteredPokemonNames = pokemonOfType.slice(offset, offset + limit);
+
+      return { filteredCount: totalCount, filteredPokemonNames };
     }
 
+    // If no types are selected, fetch all Pokémon
     const response = await fetch(apiUrl);
     if (!response.ok) {
       throw new Error('Failed to fetch Pokémon data');
     }
     const data = await response.json();
-
-    // Extract Pokemon names
     const pokemonNames = data.results.map(pokemon => pokemon.name);
-    const filteredCount = data.count; // Total count of filtered Pokémon
+    const totalCount = data.count;
 
-    return { filteredCount, filteredPokemonNames: pokemonNames };
+    return { filteredCount: totalCount, filteredPokemonNames: pokemonNames };
   } catch (error) {
     console.error('Error fetching filtered Pokémon data:', error);
     return { filteredCount: 0, filteredPokemonNames: [] };
   }
 }
 
-// Function to fetch Pokémon details from the PokeAPI
+// Fetch Pokémon details by name
 async function fetchPokemonDetails(name) {
-  const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${name}`);
-  if (!response.ok) {
+  try {
+    const response = await fetch(`${baseUrl}/pokemon/${name}`);
+    if (!response.ok) {
       throw new Error('Failed to fetch Pokémon details');
+    }
+    const pokemon = await response.json();
+    return pokemon;
+  } catch (error) {
+    console.error('Error fetching Pokémon details:', error);
+    return {};
   }
-  const data = await response.json();
-  return data;
 }
 
 function showPokemonDetails(pokemon) {
@@ -295,14 +297,19 @@ function showPokemonDetails(pokemon) {
   // Show the modal
   pokemonModal.style.display = 'block';
 }
-// Fetch types data
+// Fetch all types data
 async function fetchTypesData() {
-  const response = await fetch(`https://pokeapi.co/api/v2/type`);
-  if (!response.ok) {
+  try {
+    const response = await fetch(`${baseUrl}/type`);
+    if (!response.ok) {
       throw new Error('Failed to fetch types data');
+    }
+    const data = await response.json();
+    return data.results.map(type => type.name);
+  } catch (error) {
+    console.error('Error fetching types data:', error);
+    return [];
   }
-  const data = await response.json();
-  return data.results.map(type => type.name);
 }
 
 
@@ -310,10 +317,10 @@ async function fetchTypesData() {
 document.addEventListener('DOMContentLoaded', () => {
   // Call the fetchPokemonData function to fetch initial Pokémon data
   fetchPokemonData(0, 10)
-      .then(data => {
-          createFilterCheckboxes(); // Remove data.types parameter
-          currentPage = 1;
-          showPokemon(currentPage);
-      })
-      .catch(error => console.error('Error fetching data:', error));
+    .then(data => {
+      createFilterCheckboxes();
+      currentPage = 1;
+      showPokemon(currentPage);
+    })
+    .catch(error => console.error('Error fetching data:', error));
 });
