@@ -260,9 +260,12 @@ async function fetchPokemonDetails(name) {
 }
 
 function showPokemonDetails(pokemon) {
-  // You can define the logic to display details about the selected Pokémon here
-  // For example, you can update the modal content with the Pokémon details
   const modalContent = document.getElementById('modal-content');
+  if (!modalContent) {
+    console.error('Modal content element not found');
+    return;
+  }
+
   modalContent.innerHTML = ''; // Clear previous content
 
   const pokemonName = document.createElement('h2');
@@ -286,17 +289,34 @@ function showPokemonDetails(pokemon) {
       pokemonStats.appendChild(statItem);
   });
 
-  // Add more details as needed
-
   modalContent.appendChild(pokemonName);
   modalContent.appendChild(pokemonImage);
   modalContent.appendChild(pokemonTypes);
   modalContent.appendChild(pokemonAbilities);
   modalContent.appendChild(pokemonStats);
 
-  // Show the modal
-  pokemonModal.style.display = 'block';
+  const modal = document.getElementById('pokemon-modal');
+  if (modal) {
+    modal.style.display = 'block'; // Show the modal
+  }
 }
+
+//event listener to close the modal
+document.getElementById('close-modal').addEventListener('click', () => {
+  const modal = document.getElementById('pokemon-modal');
+  if (modal) {
+    modal.style.display = 'none'; // Hide the modal
+  }
+});
+
+// Close the modal when clicking outside of the modal content
+window.addEventListener('click', (event) => {
+  const modal = document.getElementById('pokemon-modal');
+  if (event.target === modal) {
+    modal.style.display = 'none';
+  }
+});
+
 // Fetch all types data
 async function fetchTypesData() {
   try {
